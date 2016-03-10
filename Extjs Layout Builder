@@ -1,0 +1,131 @@
+Ext.define('My.Layout', {
+
+    singleton: true,
+
+    createComponent: function (field) {
+        switch (field.code) {
+            case 'form':
+                return {
+                    xtype: 'form',
+                    title: field.title,
+                    labelWidth: 75,
+                    frame: true,
+                    bodyStyle: 'padding:5px 5px 0',
+                    width: 550,
+                    items: field.items,
+                    // form has items
+                    layout: 'column'
+                };
+            case 'fieldset':
+                return {
+                    xtype:'fieldset',
+                    columnWidth: 0.5,
+                    title: field.title,
+                    collapsible: true,
+                    defaultType: 'textfield',
+                    defaults: {anchor: '100%'},
+                    // fieldset has items
+                    items: field.items,
+                    layout: 'anchor'
+                };
+            case 'fieldset-toggle':
+                return {
+                    xtype:'fieldset',
+                    title: field.title,
+                    columnWidth: 0.5,
+                    checkboxToggle: true,
+                    collapsed: true,
+                    // fieldset has items
+                    items: field.items,
+                    layout:'anchor'
+                };
+            case 'panel':
+                return {
+                    xtype:'panel',
+                    anchor: '100%',
+                    title: field.title,
+                    frame: true,
+                    height: 52,
+                    // panel has items
+                    items: field.items
+                };
+            case 'textfield':
+                return {
+                    xtype: 'textfield',
+                    fieldLabel: field.fieldLabel,
+                    name: field.name
+                };
+
+            default:
+                // the component is not implemented yet
+                return {
+                    xtype: 'label',
+                    text: 'The component ' + field.code + ' is not implemented yet'
+                };
+        }
+    },
+
+    computeFields: function (field) {
+        if (field.fields) {
+            var items = [];
+            Ext.each(field.fields, function (innerField) {
+                var item = My.Layout.computeFields(innerField);
+                items.push(item);
+            });
+            field.items = Ext.Array.flatten(items);
+        }
+        return My.Layout.createComponent(field);
+    }
+});
+
+Ext.onReady(function () {
+    
+    var rootField = {
+            code: 'form',
+            title: 'Simple Form with FieldSets',
+            fields: [
+                {
+                    code: 'fieldset',
+                    title: 'Fieldset 1',
+                    fields: [
+                        {
+                            code: 'textfield',
+                            title: null,
+                            fields: null,
+                            fieldLabel: 'Field 1',
+                            name: 'field_1'
+                        }, {
+                            code: 'textfield',
+                            title: null,
+                            fields: null,
+                            fieldLabel: 'Field 2',
+                            name: 'field_2'
+                        }
+                    ],
+                    fieldLabel: null,
+                    name: 'fieldset_1'
+                }, {
+                    code: 'fieldset-toggle',
+                    title: 'Show Panel',
+                    fields: [
+                        {
+                            code: 'panel',
+                            title: 'Panel inside a fieldset',
+                            fields: null,
+                            fieldLabel: null,
+                            name: 'panel_1'
+                        }
+                    ],
+                    fieldLabel: null,
+                    name: 'fieldset_toggle_1'
+                }
+            ],
+            fieldLabel: null,
+            name: 'form_1'
+        };
+
+    var cfg = My.Layout.computeFields(rootField);
+    Ext.apply(cfg, {renderTo: Ext.getBody()});
+    Ext.create(cfg);
+
+});
